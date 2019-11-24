@@ -50,7 +50,7 @@ namespace GooglePhotosSharp
                 throw new ArgumentException($"{configFile} doesn't exist");
             }
 
-            var config = JsonConvert.DeserializeObject<IList<PhotoLibraryConfig>>(configFile);
+            var config = GetConfigs(configFile);
 
             var clientSecretFile = Path.Combine(configFolder, "client_secret.json");
             if (!File.Exists(clientSecretFile))
