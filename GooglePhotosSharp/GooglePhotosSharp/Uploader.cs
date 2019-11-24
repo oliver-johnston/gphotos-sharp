@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -75,21 +76,28 @@ namespace GooglePhotosSharp
                 foreach (var photo in album.OrderBy(p => p.Path))
                 {
                     Log.Information($"Uploading {photo.Path}");
-                    var uploadedPhoto = await _api.UploadPhotoAsync(photo.Path, photo.ReadAllBytes());
-                    var databasePhoto = new Photo
+                    try
                     {
-                        Path = photo.Path,
-                        AlbumName = photo.AlbumName,
-                        GoogleUploadId = uploadedPhoto.UploadToken
-                    };
-                    _database.AddOrUpdate(databasePhoto);
-                    uploadedPhotos.Add(databasePhoto);
+                        var uploadedPhoto = await _api.UploadPhotoAsync(photo.Path, photo.ReadAllBytes());
+                        var databasePhoto = new Photo
+                        {
+                            Path = photo.Path,
+                            AlbumName = photo.AlbumName,
+                            GoogleUploadId = uploadedPhoto.UploadToken
+                        };
+                        _database.AddOrUpdate(databasePhoto);
+                        uploadedPhotos.Add(databasePhoto);
 
-                    uploadedCount++;
+                        uploadedCount++;
 
-                    if (uploadedCount % 100 == 0)
+                        if (uploadedCount % 100 == 0)
+                        {
+                            Log.Information($"Uploaded [{uploadedCount:n0}/{toUpload:n0}] photos");
+                        }
+                    }
+                    catch (Exception e)
                     {
-                        Log.Information($"Uploaded [{uploadedCount:n0}/{toUpload:n0}] photos");
+                        Log.Error($"Unable to upload {photo.Path}.", e);
                     }
                 }
 
