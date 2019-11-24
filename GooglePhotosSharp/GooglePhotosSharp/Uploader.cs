@@ -92,7 +92,7 @@ namespace GooglePhotosSharp
 
                         if (uploadedCount % 100 == 0)
                         {
-                            Log.Information($"Uploaded [{uploadedCount:n0}/{toUpload:n0}] photos");
+                            Log.Information($"Uploaded [{uploadedCount:n0}/{toUpload.Count:n0}] photos");
                         }
                     }
                     catch (Exception e)
