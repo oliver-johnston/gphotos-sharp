@@ -16,13 +16,15 @@ namespace GooglePhotosSharp.GooglePhotos
     public class GooglePhotosApi : IGooglePhotosApi
     {
         private readonly string _user;
+        private readonly string _clientSecretFile;
         private readonly IClock _clock;
 
         private UserCredential _credential;
 
-        public GooglePhotosApi(string user, IClock clock = null)
+        public GooglePhotosApi(string user, string clientSecretFile, IClock clock = null)
         {
             _user = user;
+            _clientSecretFile = clientSecretFile;
             _clock = clock ?? SystemClock.Default;
         }
 
@@ -168,7 +170,7 @@ namespace GooglePhotosSharp.GooglePhotos
         {
             if (_credential == null)
             {
-                using (var stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read))
+                using (var stream = new FileStream(_clientSecretFile, FileMode.Open, FileAccess.Read))
                 {
                     _credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                         GoogleClientSecrets.Load(stream).Secrets,

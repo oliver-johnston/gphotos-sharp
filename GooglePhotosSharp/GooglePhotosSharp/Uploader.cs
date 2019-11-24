@@ -59,6 +59,8 @@ namespace GooglePhotosSharp
             var toUpload = libraryPhotos.Where(p => !databasePhotos.ContainsKey(p.Path)).ToList();
             Log.Information($@"Found {toUpload.Count():n0} photos to upload");
 
+            int uploadedCount = 0;
+
             foreach (var album in toUpload.GroupBy(p => p.AlbumName).OrderByDescending(a => a.Key))
             {
                 Log.Information($"Uploading photos in {album.Key}");
@@ -82,10 +84,19 @@ namespace GooglePhotosSharp
                     };
                     _database.AddOrUpdate(databasePhoto);
                     uploadedPhotos.Add(databasePhoto);
+
+                    uploadedCount++;
+
+                    if (uploadedCount % 100 == 0)
+                    {
+                        Log.Information($"Uploaded [{uploadedCount:n0}/{toUpload:n0}] photos");
+                    }
                 }
 
                 await AddPhotosToAlbum(uploadedPhotos, googleAlbum);
             }
+            
+            Log.Information($"Uploaded {uploadedCount:n0} photos");
         }
 
         private async Task AddPhotosToAlbum(IList<Photo> uploadedPhotos, GooglePhotosAlbum googleAlbum)
