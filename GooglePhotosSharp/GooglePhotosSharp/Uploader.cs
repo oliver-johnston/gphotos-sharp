@@ -78,7 +78,8 @@ namespace GooglePhotosSharp
                     Log.Information($"Uploading {photo.Path}");
                     try
                     {
-                        var uploadedPhoto = await _api.UploadPhotoAsync(photo.Path, photo.ReadAllBytes());
+                        var description = NormalisePath(photo.Path);
+                        var uploadedPhoto = await _api.UploadPhotoAsync(description, photo.ReadAllBytes());
                         var databasePhoto = new Photo
                         {
                             Path = photo.Path,
@@ -105,6 +106,12 @@ namespace GooglePhotosSharp
             }
             
             Log.Information($"Uploaded {uploadedCount:n0} photos");
+        }
+
+        private static string NormalisePath(string path)
+        {
+            var tempBytes = System.Text.Encoding.GetEncoding("ISO-8859-8").GetBytes(path);
+            return System.Text.Encoding.UTF8.GetString(tempBytes);
         }
 
         private async Task AddPhotosToAlbum(IList<Photo> uploadedPhotos, GooglePhotosAlbum googleAlbum)

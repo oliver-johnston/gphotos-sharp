@@ -7,6 +7,5 @@ namespace GooglePhotosSharp.Database
         IList<Photo> GetPhotos();
 
         void AddOrUpdate(Photo photo);
-
     }
 }
