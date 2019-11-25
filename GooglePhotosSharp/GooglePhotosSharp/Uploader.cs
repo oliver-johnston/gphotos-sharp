@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using GooglePhotosSharp.Config;
 using GooglePhotosSharp.Database;
@@ -78,7 +80,7 @@ namespace GooglePhotosSharp
                     Log.Information($"Uploading {photo.Path}");
                     try
                     {
-                        var description = NormalisePath(photo.Path);
+                        var description = RemoveDiacritics(photo.Path);
                         var uploadedPhoto = await _api.UploadPhotoAsync(description, photo.ReadAllBytes());
                         var databasePhoto = new Photo
                         {
@@ -108,10 +110,21 @@ namespace GooglePhotosSharp
             Log.Information($"Uploaded {uploadedCount:n0} photos");
         }
 
-        private static string NormalisePath(string path)
+        private static string RemoveDiacritics(string text) 
         {
-            var tempBytes = System.Text.Encoding.GetEncoding("ISO-8859-8").GetBytes(path);
-            return System.Text.Encoding.UTF8.GetString(tempBytes);
+            var normalizedString = text.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder();
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
         private async Task AddPhotosToAlbum(IList<Photo> uploadedPhotos, GooglePhotosAlbum googleAlbum)
