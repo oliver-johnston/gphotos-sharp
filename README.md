@@ -30,4 +30,6 @@ The program requires a directory containing two files:
 ```
 
 # Running
-`dotnet GooglePhotosSharp.dll --configFolder /path/to/config`
+```
+dotnet GooglePhotosSharp.dll --configFolder /path/to/config
+```
