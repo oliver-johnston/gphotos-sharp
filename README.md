@@ -5,9 +5,11 @@ CLI for uploading photos to Google Photos
 
 # Building
 
-`git clone https://github.com/oliver-johnston/gphotos-sharp.git
+```
+git clone https://github.com/oliver-johnston/gphotos-sharp.git
 cd gphotos-sharp/GooglePhotosSharp
-dotnet build`
+dotnet build
+```
 
 # Config
 
@@ -15,7 +17,8 @@ The program requires a directory containing two files:
  - _client_secret.json_: this is the API key obtained from Google. 
  - _config.json_: this defines the locations of your libraries and which accounts to upload them to. 
 
-`[
+```
+[
   {
     "path": "/path/to/library", 
     "email": "youraccount@gmail.com",
@@ -23,7 +26,8 @@ The program requires a directory containing two files:
     "excludeRegexes": [".bmp"] // optional
   }, 
   // more libraries here
-]`
+]
+```
 
 # Running
 `dotnet GooglePhotosSharp.dll --configFolder /path/to/config`
