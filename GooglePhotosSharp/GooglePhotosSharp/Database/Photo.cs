@@ -1,3 +1,5 @@
+using System;
+
 namespace GooglePhotosSharp.Database
 {
     public class Photo
@@ -7,6 +9,8 @@ namespace GooglePhotosSharp.Database
         public string Path { get; set; }
 
         public string AlbumName { get; set; }
+        
+        public DateTime? UploadTime { get; set; }
 
         public string GoogleUploadId { get; set; }
 

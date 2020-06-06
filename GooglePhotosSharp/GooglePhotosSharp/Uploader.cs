@@ -31,7 +31,7 @@ namespace GooglePhotosSharp
             _database = database;
             _api = api;
         }
-        
+
         public async Task UploadPhotos()
         {
             Log.Information($"Loading photos for {_config.Path}");
@@ -41,32 +41,29 @@ namespace GooglePhotosSharp
 
             var googleAlbums = (await _api.GetAlbumsAsync()).Where(a => a.IsWriteable).ToList();
 
-            var toAddToAlbums = databasePhotos.Values
-                .Where(p => p.GoogleUploadId != null
-                            && p.GoogleAlbumId == null
-                            && p.GoogleMediaItemId == null)
+            // add any photos that have been uploaded but haven't been added to albums yet (e.g. if the program terminated)
+            await AddUploadedPhotosMissingFromAlbums(databasePhotos.Values.ToList(), googleAlbums);
+
+            var toUpload = libraryPhotos.Where(p =>
+                {
+                    if (!databasePhotos.TryGetValue(p.Path, out var databasePhoto))
+                    {
+                        return true;
+                    }
+
+                    // If a photo is in the library but doesn't have a media item yet then we need to re-upload it.
+                    return databasePhoto.GoogleMediaItemId == null;
+                })
+                .Where(f => f.FileLength > 0)
                 .ToList();
 
-            foreach (var album in toAddToAlbums.GroupBy(p => p.AlbumName))
-            {
-                var googleAlbum = googleAlbums.FirstOrDefault(a => a.Title == album.Key);
-
-                if (googleAlbum == null)
-                {
-                    googleAlbum = await _api.CreateAlbumAsync(album.Key);
-                }
-
-                await AddPhotosToAlbum(album.ToList(), googleAlbum);
-            }
-
-            var toUpload = libraryPhotos.Where(p => !databasePhotos.ContainsKey(p.Path)).ToList();
-            Log.Information($@"Found {toUpload.Count():n0} photos to upload");
+            Log.Information($@"Found {toUpload.Count:n0} photos to upload");
 
             int uploadedCount = 0;
 
-            foreach (var album in toUpload.GroupBy(p => p.AlbumName).OrderByDescending(a => a.Key))
+            foreach (var album in toUpload.GroupBy(p => p.AlbumName).OrderBy(a => a.Key))
             {
-                Log.Information($"Uploading photos in {album.Key}");
+                Log.Information($"Uploading {album.Count():n0} photos in {album.Key}");
                 var googleAlbum = googleAlbums.FirstOrDefault(a => a.Title == album.Key);
 
                 if (googleAlbum == null)
@@ -86,7 +83,8 @@ namespace GooglePhotosSharp
                         {
                             Path = photo.Path,
                             AlbumName = photo.AlbumName,
-                            GoogleUploadId = uploadedPhoto.UploadToken
+                            GoogleUploadId = uploadedPhoto.UploadToken,
+                            UploadTime = DateTime.UtcNow
                         };
                         _database.AddOrUpdate(databasePhoto);
                         uploadedPhotos.Add(databasePhoto);
@@ -106,11 +104,38 @@ namespace GooglePhotosSharp
 
                 await AddPhotosToAlbum(uploadedPhotos, googleAlbum);
             }
-            
+
             Log.Information($"Uploaded {uploadedCount:n0} photos");
         }
 
-        private static string RemoveDiacritics(string text) 
+        private async Task AddUploadedPhotosMissingFromAlbums(
+            IList<Photo> databasePhotos,
+            List<GooglePhotosAlbum> googleAlbums)
+        {
+            // If the program terminated before
+            var toAddToAlbums = databasePhotos
+                .Where(p => p.GoogleUploadId != null
+                            && p.GoogleAlbumId == null
+                            && p.GoogleMediaItemId == null
+                            && p.UploadTime != null
+                            // An upload token is only valid for 24 hours. After this we need to re-upload the photo.
+                            && (DateTime.UtcNow - p.UploadTime.Value) < TimeSpan.FromHours(24))
+                .ToList();
+
+            foreach (var album in toAddToAlbums.GroupBy(p => p.AlbumName))
+            {
+                var googleAlbum = googleAlbums.FirstOrDefault(a => a.Title == album.Key);
+
+                if (googleAlbum == null)
+                {
+                    googleAlbum = await _api.CreateAlbumAsync(album.Key);
+                }
+
+                await AddPhotosToAlbum(album.ToList(), googleAlbum);
+            }
+        }
+
+        private static string RemoveDiacritics(string text)
         {
             var normalizedString = text.Normalize(NormalizationForm.FormD);
             var stringBuilder = new StringBuilder();

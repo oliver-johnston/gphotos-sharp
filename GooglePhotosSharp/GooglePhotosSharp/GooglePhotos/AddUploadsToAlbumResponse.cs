@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace GooglePhotosSharp.GooglePhotos
 {
-    public class AddUploadsToAlbumRespnonse
+    public class AddUploadsToAlbumResponse
     {
         public IList<NewMediaItem> NewMediaItemResults { get; set; }
     }

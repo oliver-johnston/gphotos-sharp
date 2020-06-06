@@ -15,6 +15,8 @@ namespace GooglePhotosSharp.LocalPhotos
 
         public string AlbumName { get; set; }
 
+        public long FileLength => _fileSystem.FileInfo.FromFileName(Path).Length;
+
         public byte[] ReadAllBytes()
         {
             return _fileSystem.File.ReadAllBytes(Path);

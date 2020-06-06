@@ -116,7 +116,7 @@ namespace GooglePhotosSharp.GooglePhotos
                     })
                 });
 
-            var response = await client.ExecutePostTaskAsync<AddUploadsToAlbumRespnonse>(request);
+            var response = await client.ExecutePostTaskAsync<AddUploadsToAlbumResponse>(request);
             ThrowOnError(response);
             return response.Data.NewMediaItemResults;
         }

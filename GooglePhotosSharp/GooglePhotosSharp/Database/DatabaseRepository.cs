@@ -32,20 +32,29 @@ namespace GooglePhotosSharp.Database
                         AlbumName = p.AlbumName,
                         GoogleUploadId = p.GoogleUploadId,
                         GoogleMediaItemId = p.GoogleMediaItemId,
-                        GoogleAlbumId = p.GoogleAlbumId
+                        GoogleAlbumId = p.GoogleAlbumId,
+                        UploadTime = p.UploadTime
                     })
                     .ToList();
             }
         }
 
-        public void AddOrUpdate(Photo photo)
+        public void AddOrUpdate(Photo p)
         {
-            photo.Path = Path.GetRelativePath(_path, photo.Path);
+            var dbPhoto = new Photo
+            {
+                Path = Path.GetRelativePath(_path, p.Path),
+                AlbumName = p.AlbumName,
+                GoogleUploadId = p.GoogleUploadId,
+                GoogleMediaItemId = p.GoogleMediaItemId,
+                GoogleAlbumId = p.GoogleAlbumId,
+                UploadTime = p.UploadTime
+            };
 
             using (var db = new LiteDatabase(_connectionString))
             {
                 var table = db.GetCollection<Photo>(PhotosTable);
-                table.Upsert(photo);
+                table.Upsert(dbPhoto);
             }
         }
     }
